@@ -7,6 +7,8 @@ const cutFabric = daythree.cutFabric
 const countConflicts = daythree.countConflicts
 const getNumberOfConflictsFromInput = daythree.getNumberOfConflictsFromInput
 const partOne = daythree.partOne
+const checkClaim = daythree.checkClaim
+const partTwo = daythree.partTwo
 
 describe('Advent of Code: Day Three', () => {
   describe('createFabric', () => {
@@ -37,10 +39,7 @@ describe('Advent of Code: Day Three', () => {
   })
 
   describe('parseInput', () => {
-    const input = [
-      '#1 @ 16,576: 17x14',
-      '#2 @ 0,20: 3x18',
-    ]
+    const input = ['#1 @ 16,576: 17x14', '#2 @ 0,20: 3x18']
 
     it('returns an array', () => {
       expect(Array.isArray(parseInput(input))).toBe(true)
@@ -49,6 +48,7 @@ describe('Advent of Code: Day Three', () => {
     describe('return array', () => {
       it('contains expected objects', () => {
         const expectedFirst = {
+          id: 1,
           left: 16,
           top: 576,
           width: 17,
@@ -56,6 +56,7 @@ describe('Advent of Code: Day Three', () => {
         }
 
         const expectedSecond = {
+          id: 2,
           left: 0,
           top: 20,
           width: 3,
@@ -88,7 +89,7 @@ describe('Advent of Code: Day Three', () => {
   describe('cutFabric', () => {
     it('returns 1 in positions that are cut (simple, no conflicts)', () => {
       const fabric = createFabric(3)
-      const coordinates = getCoordinates('#123 @ 1,1: 2x2')
+      const coordinates = getCoordinates('#1 @ 1,1: 2x2')
       const result = cutFabric(fabric, coordinates)
       const expected = [[null, null, null], [null, 1, 1], [null, 1, 1]]
 
@@ -99,7 +100,7 @@ describe('Advent of Code: Day Three', () => {
 
     it('returns 1 in positions that are cut (complex, no conflicts)', () => {
       const fabric = createFabric(11)
-      const coordinates = getCoordinates('#123 @ 3,2: 5x4')
+      const coordinates = getCoordinates('#1 @ 3,2: 5x4')
       const result = cutFabric(fabric, coordinates)
       const expected = [
         [null, null, null, null, null, null, null, null, null, null, null],
@@ -120,27 +121,27 @@ describe('Advent of Code: Day Three', () => {
 
     it('returns 2 in positions that have been attempted to be cut twice (conflicts)', () => {
       const fabric = [[null, null, null], [null, 1, 1], [null, 1, 1]]
-      const coordinates = getCoordinates('#123 @ 0,0: 2x2')
+      const coordinates = getCoordinates('#1 @ 0,0: 2x2')
       const result = cutFabric(fabric, coordinates)
-      const expected = [[1, 1, null], [1, 2, 1], [null, 1, 1]]
+      const expected = [[1, 1, null], [1, 'X', 1], [null, 1, 1]]
 
       expect(result).toEqual(expected)
     })
 
-    it('returns 2 in positions that have attempted to be cut repeatedly (conflicts)', () => {
+    it('returns X in positions that have attempted to be cut repeatedly (conflicts)', () => {
       const fabric = [[null, null, null], [null, null, null], [null, null, null]]
       const coordinates = getCoordinates('#123 @ 0,0: 2x2')
 
       // cut three times using same coords
       const result = cutFabric(cutFabric(cutFabric(fabric, coordinates), coordinates), coordinates)
-      const expected = [[2, 2, null], [2, 2, null], [null, null, null]]
+      const expected = [['X', 'X', null], ['X', 'X', null], [null, null, null]]
 
       expect(result).toEqual(expected)
     })
   })
 
   describe('countConflicts', () => {
-    const fabric = [[1, 2, 1], [1, 1, 2], [2, 1, null]]
+    const fabric = [[1, 'X', 1], [1, 1, 'X'], ['X', 1, null]]
     const result = countConflicts(fabric)
 
     it('returns a number', () => {
@@ -154,11 +155,7 @@ describe('Advent of Code: Day Three', () => {
 
   describe('getNumberOfConflictsFromInput', () => {
     const fabric = createFabric(5)
-    const input = [
-      '#1 @ 0,0: 2x2',
-      '#2 @ 0,0: 2x2',
-      '#3 @ 0,0: 2x2'
-    ]
+    const input = ['#1 @ 0,0: 2x2', '#2 @ 0,0: 2x2', '#3 @ 0,0: 2x2']
     const result = getNumberOfConflictsFromInput(fabric, input)
 
     it('returns a number', () => {
@@ -173,6 +170,29 @@ describe('Advent of Code: Day Three', () => {
   describe('partOne', () => {
     it('is a function', () => {
       expect(typeof partOne).toBe('function')
+    })
+  })
+
+  describe('checkClaim', () => {
+    it('returns true if the claim was successful', () => {
+      const coordinates = parseInput(['#1 @ 0,0: 2x2'])
+      const result = checkClaim(createFabric(2), coordinates)
+
+      expect(result).toBe(true)
+    })
+
+    it('returns false if the claim was unsuccessful (conflicts)', () => {
+      const coordinates = parseInput(['#1 @ 0,0: 2x2', '#2 @ 0,0: 2x2'])
+      const conflictFabric = cutFabric(cutFabric(createFabric(2), coordinates[0]), coordinates[1])
+      const result = checkClaim(conflictFabric, coordinates[0])
+
+      expect(result).toBe(false)
+    })
+  })
+
+  describe('partTwo', () => {
+    it('is a function', () => {
+      expect(typeof partTwo).toBe('function')
     })
   })
 })

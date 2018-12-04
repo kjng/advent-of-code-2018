@@ -39,6 +39,15 @@
 
 // If the Elves all proceed with their own plans, none of them will have enough fabric. How many square inches of fabric are within two or more claims?
 
+// --- Part Two ---
+// Amidst the chaos, you notice that exactly one claim doesn't overlap by even a single square inch of fabric with any other claim. If you can somehow draw attention to it, maybe the Elves will be able to make Santa's suit after all!
+
+// For example, in the claims above, only claim 3 is intact after all claims are made.
+
+// What is the ID of the only claim that doesn't overlap?
+
+const INPUT = require('./input')
+
 /**
  * Create multi-dimensional array of null values "n x n"
  *
@@ -90,16 +99,18 @@ function getCoordinates(str) {
     .split('x')
     .map(x => Number(x))
 
-  return { left, top, width, height }
+  const claimNumber = Number(str.split(' @')[0].slice(1))
+
+  return { id: claimNumber, left, top, width, height }
 }
 
 /**
- * 
+ *
  * @param {Object} fabric array of arrays
- * @param {Object} coordinates object with { left, top, width, height } properties
+ * @param {Object} coordinates object with { id, left, top, width, height } properties
  * @returns {Object}
  */
-function cutFabric(fabric, { left, top, width, height }) {
+function cutFabric(fabric, { id, left, top, width, height }) {
   const newFabric = fabric.slice().map(innerArray => innerArray.slice())
   const firstRow = top
   const lastRow = top + height - 1
@@ -108,12 +119,10 @@ function cutFabric(fabric, { left, top, width, height }) {
 
   // go through rows
   for (let i = firstRow; i <= lastRow; i++) {
-
     // go through columns
     for (let j = firstColumn; j <= lastColumn; j++) {
-
       // cut position using 1 if first cut, 2 if cut before
-      newFabric[i][j] = newFabric[i][j] === 1 || newFabric[i][j] === 2 ? 2 : 1
+      newFabric[i][j] = newFabric[i][j] === null ? id : 'X'
     }
   }
 
@@ -121,19 +130,29 @@ function cutFabric(fabric, { left, top, width, height }) {
 }
 
 /**
- * Count the number of conflicting areas in the fabric (represented by 2)
- * 
- * @param {Object} fabric 
+ * Count the number of conflicting areas in the fabric (represented by X)
+ *
+ * @param {Object} fabric
  * @returns {Number} count of conflicts
  */
 function countConflicts(fabric) {
   return fabric.reduce((total, row) => {
-    return total + row.reduce((count, val) => {
-      return val === 2 ? count + 1 : count
-    }, 0)
+    return (
+      total +
+      row.reduce((count, val) => {
+        return val === 'X' ? count + 1 : count
+      }, 0)
+    )
   }, 0)
 }
 
+/**
+ * Get the number of conflicts using claims from input
+ *
+ * @param {Object} fabric
+ * @param {Object} unformattedInput array of strings
+ * @returns {Number} count of conflicts
+ */
 function getNumberOfConflictsFromInput(fabric, unformattedInput) {
   const parsedInput = parseInput(unformattedInput)
   const resultFabric = parsedInput.reduce((fabric, claim) => {
@@ -144,20 +163,67 @@ function getNumberOfConflictsFromInput(fabric, unformattedInput) {
 }
 
 /**
- * Runner to solve day 3 problem using problem input and on a generated fabric array
- * 
- * Answer is 111630
+ * Returns whether or not the claim is fully present in the fabric
+ *
+ * @param {Object} fabric
+ * @param {Object} coordinates object with { id, left, top, width, height } properties
+ * @returns {Boolean}
  */
-function partOne() {
-  const input = require('./input')
+function checkClaim(fabric, { id, left, top, width, height }) {
+  const firstRow = top
+  const lastRow = top + height - 1
+  const firstColumn = left
+  const lastColumn = left + width - 1
+
+  // go through rows
+  for (let i = firstRow; i <= lastRow; i++) {
+    // go through columns
+    for (let j = firstColumn; j <= lastColumn; j++) {
+      if (fabric[i][j] !== id) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+/**
+ * Runner to solve day 3 problem partOne using problem input and on a generated fabric array
+ *
+ * @returns {Number} number of conflicts
+ */
+function partOne(input) {
   const fabric = createFabric(1000)
 
-  return getNumberOfConflictsFromInput(fabric, input)
+  return getNumberOfConflictsFromInput(fabric, input || INPUT)
+}
+
+/**
+ * Runner to solve partTwo
+ * 
+ * @returns {Number|Boolean} id of first successful claim, or false if none
+ */
+function partTwo(input) {
+  const fabric = createFabric(1000)
+  const formattedInput = parseInput(input || INPUT)
+  const resultFabric = formattedInput.reduce((fabric, claim) => {
+    return cutFabric(fabric, claim)
+  }, fabric)
+
+  for (let coordinates of formattedInput) {
+    if (checkClaim(resultFabric, coordinates) === true) {
+      return coordinates.id
+    }
+  }
+
+  return false
 }
 
 module.exports = {
   problems: {
-    partOne
+    partOne,
+    partTwo
   },
   createFabric,
   parseInput,
@@ -165,5 +231,7 @@ module.exports = {
   cutFabric,
   countConflicts,
   getNumberOfConflictsFromInput,
-  partOne
+  checkClaim,
+  partOne,
+  partTwo
 }
