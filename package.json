@@ -1,0 +1,16 @@
+{
+  "name": "advent-of-code",
+  "version": "1.0.0",
+  "description": "Advent of Code 2018 Toy Problems",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon --exec jasmine **/*.spec.js",
+    "start": "npm test"
+  },
+  "author": "Kevin Jang <kevin.jang@wakefern.com>",
+  "license": "MIT",
+  "dependencies": {
+    "jasmine": "^3.3.0",
+    "nodemon": "^1.18.7"
+  }
+}
